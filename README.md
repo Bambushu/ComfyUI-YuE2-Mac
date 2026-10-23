@@ -2,7 +2,9 @@
 
 YuE2 song generation in ComfyUI on Apple Silicon. Style tags and lyrics in, a full song with vocals out, as a normal ComfyUI `AUDIO`. Runs on [yue2.cpp](https://github.com/ServeurpersoCom/yue2.cpp) with Metal, not PyTorch, so it fits a 16 GB Mac.
 
-Tested on an M1 MacBook Air 16 GB (macOS 26.3).
+Tested on an M1 MacBook Air 16 GB (macOS 26.3). Demos and workflow downloads on [Civitai](https://civitai.com/models/3015968).
+
+<img src="docs/hero.jpg" width="360" alt="YuE2: songs on a 16 GB Mac">
 
 ![song workflow](docs/canvas_song.png)
 ![cover workflow](docs/canvas_cover.png)
@@ -33,14 +35,20 @@ The audio nodes download SheetSage2, MERT and the tokenizer (about 1 GB) on firs
 
 Each node runs yue2.cpp in its own process: ComfyUI's models are unloaded first, and all memory comes back when the render ends. Cancel works.
 
-## Speed on an M1 MacBook Air 16 GB
-| Song | Time | Peak memory | Swap |
-|---|---|---|---|
-| 55 s jingle | 6m49s | +3.9 GB | none |
-| 3:53 song | 54m20s | 12.3 GB system total | none |
-| 55 s cover (Transcribe + Render) | 8m01s | 12.4 GB system total | none |
-| Extend: 20 s of a source + 55 s new (75 s) | 8m31s | 13.5 GB system total | none |
-| Re-render a 55 s recording (codes + realaudio adapter) | 6m03s | 11.8 GB system total | none |
+## Speed
+| | M1 MacBook Air 16 GB | M5 Pro 48 GB |
+|---|---|---|
+| Software | these nodes, yue2.cpp Q8 on Metal | official YuE2 Python, PyTorch MPS, `--offload-ar` |
+| Score only (YuE2 Plan) | ~30 s for a 55 s song, ~80 s for a 4 min song | ~2 min |
+| 55 s song | 8m07s | not measured |
+| Full song | 3:53 song in 54m20s | ~20-25 min |
+| 55 s cover (Transcribe + Render) | 8m01s | transcription alone 1-3 min |
+| Extend: 20 s kept + 55 s new | 8m31s | not measured |
+| Re-render a 55 s recording (codes + realaudio adapter) | 6m03s | not measured |
+| Peak memory, whole system | 11.8-13.5 GB, no swap on any run | |
+| Longest song | 3:53 tested | out of memory above ~5:30 |
+
+The columns are different software, so this is not a chip-vs-chip race: the M5 column is how covers were made before this pack existed.
 
 The acoustic stage is most of the time and grows faster than the song length. Steps lower it (`steps` on YuE2 Render, default 32).
 
